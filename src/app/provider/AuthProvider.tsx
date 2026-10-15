@@ -1,6 +1,7 @@
 "use client"
 
-import { createContext, useContext, type ReactNode} from "react"
+import { createContext, useContext, type ReactNode, useEffect } from "react"
+import { startOnlineSync } from "@/lib/offline/sync/online"
 
 export type AuthUser = {
     id: string
@@ -21,15 +22,25 @@ type AuthProviderProps = {
     children: ReactNode
 }
 
-const AuthProvider = ({user, children}: AuthProviderProps) =>
-    <AuthContext.Provider value={{ user }}>
-        {children}
-    </AuthContext.Provider>
+const AuthProvider = ({ user, children }: AuthProviderProps) => {
+    useEffect(() => {
+        return startOnlineSync()
+    }, [])
+
+    return (
+        <AuthContext.Provider value={{ user }}>
+            {children}
+        </AuthContext.Provider>
+    )
+}
 
 export const useAuth = () => {
     const context = useContext(AuthContext)
+
     if (!context)
         throw new Error("useAuth must be used within AuthProvider")
+
     return context
 }
+
 export default AuthProvider

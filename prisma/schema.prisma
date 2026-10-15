@@ -278,6 +278,7 @@ model User {
   name          String?
   email         String  @unique
   phone         String?  @unique
+  phoneVerifiedAt DateTime?  
   avatarUrl     String?  
   passwordHash  String
   resetTokenHash      String?   @unique
@@ -288,6 +289,7 @@ model User {
   roles     UserRole[]
   sessions  UserSession[]
   auditLogs AuditLog[]
+  syncOperations  SyncOperation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2000,5 +2002,28 @@ model AuditLog {
 
   @@index([userId])
   @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+// ============================================================
+// OFFLINE SYNC
+// ============================================================
+
+model SyncOperation {
+  id String @id
+
+  userId   String
+  type     String
+  entityId String
+
+  status String @default("processing")
+
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([entityId])
   @@index([createdAt])
 }
