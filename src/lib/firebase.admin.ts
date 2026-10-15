@@ -12,3 +12,4 @@ function getAdminApp() {
 }
 
 export const getFirebaseAdminAuth = () => getAuth(getAdminApp())
+

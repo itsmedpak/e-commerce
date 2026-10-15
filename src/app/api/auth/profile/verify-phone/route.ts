@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { getUserFromSession } from "@/server/auth/session"
 import { prisma } from "@/lib/prisma"
-import { firebaseAdminAuth } from "@/lib/firebase.admin"
+import { getFirebaseAdminAuth } from "@/lib/firebase.admin"
 
 export const POST = async (req: Request) => {
     try {
@@ -28,10 +28,16 @@ export const POST = async (req: Request) => {
             return NextResponse.json(
                 { error: "Firebase ID token is required" }, { status: 400 }
             )
+        
+        const decodedToken = await getFirebaseAdminAuth()
+            .verifyIdToken(body.idToken, true)
+            .catch(() => null)
 
-        const decodedToken = await firebaseAdminAuth.verifyIdToken(body.idToken, true)
-
-        const verifiedPhone = decodedToken.phone_number
+        if (!decodedToken)
+            return NextResponse.json(
+                { error: "Invalid or expired Firebase token" }, { status: 401 }
+            )
+    const verifiedPhone = decodedToken.phone_number
 
         if (!verifiedPhone)
             return NextResponse.json(
