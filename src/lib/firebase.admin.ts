@@ -1,20 +1,14 @@
-
 import { cert, getApp, getApps, initializeApp } from "firebase-admin/app"
 import { getAuth } from "firebase-admin/auth"
 
-const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID
-const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL
-const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY_B64
-    ? Buffer.from(process.env.FIREBASE_ADMIN_PRIVATE_KEY_B64, "base64").toString("utf8")
-    : process.env.FIREBASE_ADMIN_PRIVATE_KEY
-        ?.replace(/^["']|["']$/g, "")
-        .replace(/\\n/g, "\n")
-        .trim()
+function getAdminApp() {
+    if (getApps().length) return getApp()
 
-if (!projectId || !clientEmail || !privateKey)
-    throw new Error("Firebase Admin environment variables are missing")
+    const b64 = process.env.FIREBASE_ADMIN_PRIVATE_KEY
+    if (!b64) throw new Error("FIREBASE_SERVICE_ACCOUNT_B64 is missing")
 
-const app = getApps().length ? getApp()
-    : initializeApp({ credential: cert({ projectId, clientEmail, privateKey }) })
+    const sa = JSON.parse(Buffer.from(b64, "base64").toString("utf8"))
+    return initializeApp({ credential: cert(sa) })
+}
 
-export const firebaseAdminAuth = getAuth(app)
+export const getFirebaseAdminAuth = () => getAuth(getAdminApp())
